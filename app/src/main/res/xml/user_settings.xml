@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <PreferenceCategory
+        android:title="@string/connection_preferences">
+
+        <EditTextPreference
+            android:title="@string/preference_url_title"
+            android:key="@string/preference_url_key"
+            android:defaultValue="@string/preference_url_default"
+            android:inputType="text"
+            android:singleLine="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/security_preferences">
+        
+        <CheckBoxPreference
+            android:title="@string/preference_remember_title"
+            android:key="@string/preference_remember_key"
+            android:defaultValue="false" />
+
+        <EditTextPreference
+            android:title="@string/preference_key_title"
+            android:key="@string/preference_key_key"
+            android:defaultValue=""
+            android:inputType="numberPassword"
+            android:singleLine="true" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

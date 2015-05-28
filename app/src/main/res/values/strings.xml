@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Front Door</string>
+    <string name="hint">enter/paste key</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_settings">Settings</string>
+    <string name="connection_preferences">Connection</string>
+    <string name="security_preferences">Security</string>
+    <string name="preference_url_title">Url</string>
+    <string name="preference_url_key">url</string>
+    <string name="preference_remember_title">Remember Key</string>
+    <string name="preference_remember_key">remember</string>
+    <string name="preference_key_title">Key</string>
+    <string name="preference_key_key">key</string>
+    <string name="preference_url_default">http://paulanerplatz.homenet.org.ipv4.sixxs.org/php/process.php</string>
+</resources>
