@@ -19,5 +19,6 @@ public class MainActivity extends AppCompatActivity {
             toolbar.setTitle(R.string.app_name);
             setSupportActionBar(toolbar);
         }
+        new GcmRegistrationAsyncTask(this).execute();
     }
 }
