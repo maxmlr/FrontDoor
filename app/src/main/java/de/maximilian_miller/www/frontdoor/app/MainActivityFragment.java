@@ -35,7 +35,7 @@ import java.util.Map;
 
 
 /**
- * Main Keypad View
+ * Main Keypad View Fragment
  */
 public class MainActivityFragment extends Fragment implements View.OnClickListener
 {

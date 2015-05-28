@@ -8,6 +8,10 @@ import android.preference.EditTextPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 
+
+/**
+ * Settings Fragment
+ */
 public class SettingsFragment extends PreferenceFragment implements OnSharedPreferenceChangeListener
 {
     @Override
