@@ -35,7 +35,7 @@ import java.util.Map;
 
 
 /**
- * A placeholder fragment containing a simple view.
+ * Main Keypad View
  */
 public class MainActivityFragment extends Fragment implements View.OnClickListener
 {
