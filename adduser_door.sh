@@ -1,0 +1,9 @@
+#!/usr/bin/php -q
+<?php
+require("SQLiteHandler.php");
+require("config.php");
+
+$db = new SQLiteHandler($CONFIG['db']);
+$code = $db->addUser($argv[1]);
+echo "User: " . $argv[1]  . "\nCode: " . $code . "\n";
+?>
