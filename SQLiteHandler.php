@@ -3,20 +3,18 @@ class SQLiteHandler
 {
   private $db;
 
+  private $default_key_length = 4;
+
   function __construct($database){
     $this->db = new SQLite3($database);
   }
 
   function createTable_logins(){
-    return $this->db->query("CREATE TABLE logins (id INTEGER PRIMARY KEY AUTOINCREMENT, user varchar(25), date varchar(25), ip varchar(50))");
+    return $this->db->query("CREATE TABLE logins (id INTEGER PRIMARY KEY AUTOINCREMENT, user varchar(50), date DATETIME DEFAULT CURRENT_TIMESTAMP, ip varchar(50))");
   }
 
   function createTable_users(){
-    return $this->db->query("CREATE TABLE users (user varchar(25) PRIMARY KEY, key varchar(10))");
-  }
-
-  function createTable_tmpusers(){
-    return $this->db->query("CREATE TABLE users (user varchar(25) PRIMARY KEY, key varchar(10), date DATETIME)");
+    return $this->db->query("CREATE TABLE users (user varchar(50) PRIMARY KEY, key varchar(20), valid DATETIME DEFAULT NULL)");
   }
 
   function dropTable($table){
@@ -24,19 +22,23 @@ class SQLiteHandler
   }
 
   function validate($key){
-    $result = $this->db->query("SELECT EXISTS(SELECT 1 FROM users WHERE key='".$key."')");
+    $result = $this->db->query("SELECT EXISTS(SELECT 1 FROM users WHERE key='".$key."' and (valid is null or datetime('now', 'localtime') <= valid))");
     return $result->fetchArray()[0];
   }
 
-  function addUser($user, $key=false){
+  function addUser($user, $key=false, $valid=false){
     if(!$key)
     {
       $key = '';
-      for($i = 0; $i < 6; $i++) {
+      for($i = 0; $i < $this->default_key_length; $i++) {
         $key .= mt_rand(0, 9);
       }
     }
-    $result = $this->db->query("INSERT INTO users ('user', 'key') VALUES ('".$user."', '".$key."')");
+    if(!$valid)                         
+      $query = "INSERT INTO users ('user', 'key') VALUES ('".$user."', '".$key."')";                                 
+    else
+      $query = "INSERT INTO users ('user', 'key', 'valid') VALUES ('".$user."', '".$key."', '".$valid."')";
+    $result = $this->db->query($query);
     return $key;
   }
 
@@ -44,16 +46,26 @@ class SQLiteHandler
     $this->db->exec("DELETE FROM users WHERE user='".$user."'");
   }
 
-  function changeUser($user, $key=false){
+  function updateUserKey($user, $key=false){
     if(!$key)
     {
       $key = '';
-      for($i = 0; $i < $length; $i++) {
+      for($i = 0; $i < $this->default_key_length; $i++) {
         $key .= mt_rand(0, 9);
       }
     }
 
     $result = $this->db->query("UPDATE users SET key = '".$key."' WHERE user='".$user."'");
+  }
+
+  function updateUserValid($user, $datetime=false){
+    if(!$datetime)
+    {
+      $valid = "NULL";
+    }
+    $valid = "'" . $valid . "'";
+
+    $result = $this->db->query("UPDATE users SET valid = ".$valid." WHERE user='".$user."'");
   }
 
  function whichUser($key){
