@@ -19,6 +19,10 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -30,7 +34,10 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 
@@ -53,6 +60,9 @@ public class MainActivityFragment extends Fragment implements View.OnClickListen
     private Button btnCancel;
     private Button btnOK;
     private ProgressBar pb;
+
+    public static final int RESPONSE_OK = 0;
+    public static final int RESPONSE_ERROR = 1;
 
     public MainActivityFragment() {
     }
@@ -181,12 +191,12 @@ public class MainActivityFragment extends Fragment implements View.OnClickListen
         }
     }
 
-    private class MyAsyncTask extends AsyncTask<String, Integer, String>
+    private class MyAsyncTask extends AsyncTask<String, Integer, HashMap<String, Object>>
     {
         String code;
 
         @Override
-        protected String doInBackground(String... params)
+        protected HashMap<String, Object> doInBackground(String... params)
         {
             Map<String, String> parameters = new HashMap<>();
             parameters.put("key",params[0]);
@@ -203,9 +213,9 @@ public class MainActivityFragment extends Fragment implements View.OnClickListen
         }
 
         @Override
-        protected void onPostExecute(String response)
+        protected void onPostExecute(HashMap<String, Object> response)
         {
-            String message = response;
+            int responseCode = (int)response.get("response_code");
             pb.setVisibility(View.INVISIBLE);
             String preferenceRememberKey = getString(R.string.preference_remember_key);
             SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -214,8 +224,16 @@ public class MainActivityFragment extends Fragment implements View.OnClickListen
                 panel.setHint(R.string.hint);
             else
                 panel.setText(code);
-            if (!response.equals("DENIED") && !response.startsWith("ERROR"))
-                message = "Welcome back " + response + "!";
+            String message;
+            if (responseCode == RESPONSE_OK)
+            {
+                if ((int)response.get("valid") == 1)
+                    message = "Welcome back " + response.get("name") + "!";
+                else
+                    message = "DENIED";
+            }
+            else
+                message = "ERROR: " + response.get("msg_err");
             Toast toast = Toast.makeText(getActivity().getApplicationContext(), message, Toast.LENGTH_LONG);
             toast.setGravity(Gravity.CENTER, Gravity.CENTER, Gravity.CENTER);
             toast.show();
@@ -227,9 +245,9 @@ public class MainActivityFragment extends Fragment implements View.OnClickListen
             pb.setProgress(progress[0]);
         }
 
-        public String postData(String postParameters)
+        public HashMap<String, Object> postData(String postParameters)
         {
-            String response = "";
+            HashMap<String, Object> response = new HashMap<>();
             BufferedReader br = null;
             HttpURLConnection conn = null;
 
@@ -263,34 +281,45 @@ public class MainActivityFragment extends Fragment implements View.OnClickListen
                     e.printStackTrace();
                 }
 
+                int responseCode = RESPONSE_OK;
+
                 // handle issues
                 int statusCode;
 
                 statusCode = conn.getResponseCode();
 
                 if (statusCode != HttpURLConnection.HTTP_OK) {
-                    response = "ERROR: "+statusCode;
+                    responseCode = RESPONSE_ERROR;
+                    response.put("msg_err", "Connection failure: "+responseCode);
                 }
                 else
                 {
                     // read the response
+                    String response_raw = "";
+
                     InputStream in = new BufferedInputStream(conn.getInputStream());
 
                     br = new BufferedReader(new InputStreamReader(in));
-                    String line;
 
+                    String line;
                     while ((line = br.readLine()) != null) {
-                        response += line + "\n";
+                        response_raw += line + "\n";
                     }
+                    JSONObject json = new JSONObject(response_raw.trim());
+                    response.putAll(jsonToMap(json));
                 }
+                response.put("response_code", responseCode);
 
 
             } catch (MalformedURLException e) {
-                response = "ERROR - Wrong URL!";
-                e.printStackTrace();
-            } catch (IOException e) {
-                response = "ERROR - "+e.getMessage();
-                e.printStackTrace();
+                response.put("msg_err", e.getMessage());
+                Log.e("FrontDoor:HttpRequest", e.getMessage(), e);
+            } catch (IOException e1) {
+                response.put("msg_err", e1.getMessage());
+                Log.e("FrontDoor:HttpRequest", e1.getMessage(), e1);
+            } catch (JSONException e2) {
+                response.put("msg_err", e2.getMessage());
+                Log.e("FrontDoor:HttpRequest", e2.getMessage(), e2);
             } finally {
                 if (conn != null) {
                     conn.disconnect();
@@ -299,12 +328,13 @@ public class MainActivityFragment extends Fragment implements View.OnClickListen
                     try {
                         br.close();
                     } catch (final IOException e) {
-                        Log.e("FrontDoor:HttpRequest", "Error closing stream", e);
+                        Log.e("FrontDoor:HttpRequest", e.getMessage(), e);
                     }
                 }
 
             }
-            return response.trim();
+
+            return response;
         }
 
         // create post query string
@@ -349,6 +379,51 @@ public class MainActivityFragment extends Fragment implements View.OnClickListen
             inputStream.close();
             return result;
 
+        }
+
+        public Map<String, Object> jsonToMap(JSONObject json) throws JSONException {
+            Map<String, Object> retMap = new HashMap<>();
+
+            if(json != JSONObject.NULL) {
+                retMap = toMap(json);
+            }
+            return retMap;
+        }
+
+        public Map<String, Object> toMap(JSONObject object) throws JSONException {
+            Map<String, Object> map = new HashMap<>();
+
+            Iterator<String> keysItr = object.keys();
+            while(keysItr.hasNext()) {
+                String key = keysItr.next();
+                Object value = object.get(key);
+
+                if(value instanceof JSONArray) {
+                    value = toList((JSONArray) value);
+                }
+
+                else if(value instanceof JSONObject) {
+                    value = toMap((JSONObject) value);
+                }
+                map.put(key, value);
+            }
+            return map;
+        }
+
+        public List<Object> toList(JSONArray array) throws JSONException {
+            List<Object> list = new ArrayList<>();
+            for(int i = 0; i < array.length(); i++) {
+                Object value = array.get(i);
+                if(value instanceof JSONArray) {
+                    value = toList((JSONArray) value);
+                }
+
+                else if(value instanceof JSONObject) {
+                    value = toMap((JSONObject) value);
+                }
+                list.add(value);
+            }
+            return list;
         }
     }
 }
