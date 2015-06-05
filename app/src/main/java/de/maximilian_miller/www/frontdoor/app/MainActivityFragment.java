@@ -42,7 +42,7 @@ import java.util.Map;
 
 
 /**
- * Key
+ * Main Screen
  */
 public class MainActivityFragment extends Fragment implements View.OnClickListener
 {
@@ -61,6 +61,8 @@ public class MainActivityFragment extends Fragment implements View.OnClickListen
     private Button btnOK;
     private ProgressBar pb;
 
+    private boolean straightExecution = false;
+
     public static final int RESPONSE_OK = 0;
     public static final int RESPONSE_ERROR = 1;
 
@@ -70,9 +72,31 @@ public class MainActivityFragment extends Fragment implements View.OnClickListen
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Menü bekannt geben, dadurch kann unser Fragment Menü-Events verarbeiten
         setHasOptionsMenu(true);
+        // Get the message from the intent
+        Intent intent = this.getActivity().getIntent();
+        if (intent.hasExtra(NFCActivity.NFC_TAG)) {
+            String nfc_tag = intent.getStringExtra(NFCActivity.NFC_TAG);
+            straightExecution = true;
+        }
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        Log.d("FrontDoor:HttpRequest", "Straight execution: "+straightExecution);
+        if (straightExecution) {
+            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            if (panel.getText().toString().isEmpty())
+            {
+                Toast toast = Toast.makeText(getActivity().getApplicationContext(), R.string.msg_no_key, Toast.LENGTH_LONG);
+                toast.setGravity(Gravity.CENTER, Gravity.CENTER, Gravity.CENTER);
+                toast.show();
+                return;
+            }
+            MyAsyncTask task = new MyAsyncTask();
+            task.execute(panel.getText().toString());
+        }
     }
 
     @Override
@@ -83,14 +107,16 @@ public class MainActivityFragment extends Fragment implements View.OnClickListen
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Prüfen, ob Menü-Elemente der Action Bar ausgewählt wurden
-        // Wir prüfen, ob Menü-Element mit der ID "action_aktualisieren" ausgewählt wurde
-        // Wurde unser Button gedrückt, geben wir eine Meldung aus
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            startActivity(new Intent(this.getActivity(), SettingsActivity.class));
-            return true;
+        switch (item.getItemId()) {
+            case R.id.action_settings:
+                startActivity(new Intent(this.getActivity(), SettingsActivity.class));
+                return true;
+            case R.id.action_nfc:
+                startActivity(new Intent(this.getActivity(), NFCActivity.class));
+                return true;
+
         }
+
         return super.onOptionsItemSelected(item);
     }
 
