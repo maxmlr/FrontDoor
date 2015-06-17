@@ -58,22 +58,24 @@ $("form").submit(function(event)
     var form = $(this);
     var action = form.attr("action"),
         method = form.attr("method"),
-        data   = form.serialize();
+	dataType = "json",
+        data     = form.serialize();
 
     $.ajax({
         url : action,
         type : method,
+	dataType: dataType,
         data : data
     }).done(function (result) {
-	if (result == "DENIED")
+	if (result["valid"] == 0)
 	{
-	$("#user").attr("value",result);
+	$("#user").attr("value","DENIED");
             $("#user").css({
                 "background": "red",
 		"color": "white"
             });
 	} else {
-	$("#user").attr("value","Hi "+result+"!");
+	$("#user").attr("value","Hi "+result["name"]+"!");
             $("#user").css({
                 "background": "lightgreen"
             });
@@ -133,7 +135,7 @@ $("form").submit(function(event)
 
     </div>
 </form>
-<a href="static/downloads/app-release.apk" data-ajax="false">Download Android App</a>
+<a href="https://github.com/maxmlr/FrontDoor/releases/latest" data-ajax="false">Download Android App</a>
 </div>
 
   </div>
