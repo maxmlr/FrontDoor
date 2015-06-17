@@ -1,7 +1,9 @@
 <resources>
     <string name="app_name">Front Door</string>
     <string name="hint">enter/paste key</string>
+    <string name="msg_no_key">No Key saved!</string>
     <string name="action_settings">Settings</string>
+    <string name="action_nfc">NFC</string>
     <string name="title_activity_settings">Settings</string>
     <string name="connection_preferences">Connection</string>
     <string name="security_preferences">Security</string>
@@ -12,4 +14,8 @@
     <string name="preference_key_title">Key</string>
     <string name="preference_key_key">key</string>
     <string name="preference_url_default">http://paulanerplatz.homenet.org.ipv4.sixxs.org/php/process.php</string>
+    <string name="title_activity_nfc">NFC</string>
+    <string name="write_a_new_tag">Click to write a new tag</string>
+    <string name="edit_text">Click to write a new tag</string>
+    <string name="mimetype_nfc">application/vnd.frontdoor.app</string>
 </resources>
