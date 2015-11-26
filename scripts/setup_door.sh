@@ -1,7 +1,7 @@
 #!/usr/bin/php -q
 <?php
-require("SQLiteHandler.php");
-require("config.php");
+require("../html/php/SQLiteHandler.php");
+require("../html/php/config.php");
 
 $db = new SQLiteHandler($CONFIG['db']);
 
